@@ -5,9 +5,6 @@
 import sys
 from cpu import *
 
-HLT = 0b00000001
-LDI = 0b10000010
-PRN = 0b01000111
 cpu = CPU()
 cpu.load()
 cpu.run()
@@ -17,8 +14,9 @@ cpu.run()
 
 
 
-
-
+# HLT = 0b00000001
+# LDI = 0b10000010
+# PRN = 0b01000111
 
 
 # binary to decimal
