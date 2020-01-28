@@ -60,10 +60,19 @@ but you'll have to implement those three above instructions first!
 ## Step 0: IMPORTANT: inventory what is here!
 
 * Make a list of files here.
+inv = [ call, interupts, keyboard, mult, print8, printstr, sctest, stack, stackoverflow ]
 * Write a short 3-10-word description of what each file does.
+    call = calls a subroutine fn at the address stored in the register?
+    interrupts = interupts current proccess to start a more important one?
+    mult = ???
+    print8 = prints the number 8 from binary
+    printstr = ???
+    sctest = ???
+    stack = SP points at top of stack or F4 if its empty
+    stackoverflow = ???
 * Note what has been implemented, and what hasn't.
 * Read this whole file.
-* Skim the spec.
+* Skim the spec. -oops yeah 'skimmed' brain = mush from full diving into that xD
 
 ## Step 1: Add the constructor to `cpu.py`
 
