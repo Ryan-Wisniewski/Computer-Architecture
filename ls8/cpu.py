@@ -3,24 +3,38 @@
 import sys
 # print('check here moron', sys.argv)
 
+LDI = 0b10000010
+PRN = 0b01000111
+HLT = 0b00000001
+MUL = 0b10100010
+PUSH = 0b01000101
+POP = 0b01000110
+
 class CPU:
     """Main CPU class."""
 
     def __init__(self):
         """Construct a new CPU."""
-        self.ram = [0] * 16 #change to 256
+        self.ram = [0] * 256 #change to 256
         self.reg = [0] * 8
         self.PC = 0
-        self.LDI = 0b10000010
-        self.PRN = 0b01000111
-        self.HLT = 0b00000001
-        self.MUL = 0b10100010
+        self.SP = 7
+        self.is_running = True
+        self.branchtable = {}
+        self.branchtable[PRN] = self.prn
+        # self.branchtable[ADD] = self.add
+        # self.branchtable[SUB] = self.sub
+        self.branchtable[MUL] = self.mul
+        self.branchtable[LDI] = self.ldi
+        self.branchtable[HLT] = self.hlt
+        self.branchtable[PUSH] = self.push
+        self.branchtable[POP] = self.pop
 
     def ram_read(self, mar): #MAR (_Memory Address Register_) *ADDRESS*
-        return self.reg[mar]
+        return self.ram[mar]
 
     def ram_write(self, mar, mdr): #MDR (_Memory Data Register_) *DATA VALUE*
-        self.reg[mar] = mdr
+        self.ram[mar] = mdr
         return self.ram[mar]
 
     def load(self):
@@ -37,7 +51,8 @@ class CPU:
                     split = split_excess[0].strip()
                     if split == '':
                         continue # ignores blank lines
-                    self.ram[address] = int(split, 2)
+                    val = int(split, 2)
+                    self.ram_write(address, val)
                     address += 1
         except FileNotFoundError:
             print(f"FileNotFound: {sys.argv}")
@@ -80,34 +95,46 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        is_running = True
+        while self.is_running:
+            r = self.ram[self.PC] 
+            self.branchtable[r]()
+        # print('areee degub matey', r, self.PC, self.reg, self.ram)
 
-        while is_running:
-            r = self.ram[self.PC]
+    def hlt(self):
+        print('HALTING PLEASE WAIT...')
+        self.is_running = False
 
-            if r == self.HLT:
-                print('HALTING PLEASE WAIT...')
-                is_running = False
-            elif r == self.LDI:
-                mar = self.ram[self.PC + 1]
-                mdr = self.ram[self.PC + 2]
-                # print('hi', mar, mdr)
-                self.ram_write(mar, mdr)
-                self.PC += 3
-            elif r == self.PRN:
-                mar = self.ram[self.PC + 1]
-                mdr = self.ram_read(mar)
-                print(mdr, mar) #prints value at that specific address.
-                self.PC += 2
-            elif r == self.MUL:
-                mar1 = self.ram[self.PC + 1]
-                mar2 = self.ram[self.PC + 2]
-                # mdr1 = self.ram_read(mar1)
-                # mdr2 = self.ram_read(mar2)
-                # print(mar1, mdr1, mar2, mdr2)
-                self.alu('MUL', mar1, mar2)
-                self.PC += 3
-            else:
-                print(f'Something unknown happened. Stop trying to break me...: {r}, {type(r)}')
-                sys.exit(1)
-        # print('areee matey', r, self.PC, self.reg, type(r))
+    def ldi(self):
+        mar = self.ram_read(self.PC + 1)
+        mdr = self.ram_read(self.PC + 2)
+        # print('hi', mar, mdr)
+        self.reg[mar] = mdr
+        self.PC += 3
+    def prn(self):
+        mar = self.ram_read(self.PC + 1)
+        mdr = self.reg[mar]
+        #prints value at that specific address.
+        print('PRINTING','mdr or the value at register:', mdr, 'mar:', mar)
+        self.PC += 2
+    def mul(self):
+        mar1 = self.ram_read(self.PC + 1)
+        mar2 = self.ram_read(self.PC + 2)
+        self.alu('MUL', mar1, mar2)
+        self.PC += 3
+    def push(self):
+        mar = self.ram_read(self.PC + 1)
+        mdr = self.reg[mar]
+        # Decrement the SP.
+        self.reg[self.SP] -= 1
+        # print('push', mar, mdr, self.SP, self.reg[self.SP])
+        # Copy the value in the given register to the address pointed to by SP.
+        self.ram_write(self.reg[self.SP], mdr)
+
+        self.PC += 2
+    def pop(self):
+        mar = self.ram_read(self.PC + 1)
+        # Copy the value from the address pointed to by SP to the given register.
+        self.reg[mar] = self.ram_read(self.reg[self.SP])
+        self.reg[self.SP] += 1
+        # print('pop', mar, mdr,  self.reg[mdr], self.reg[self.SP])
+        self.PC += 2
